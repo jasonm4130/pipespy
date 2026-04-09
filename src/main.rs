@@ -1,19 +1,12 @@
-mod buffer;
-mod cli;
-mod format;
-mod highlight;
-mod pipeline;
-mod stats;
-mod tui;
-
-use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Arc;
 use std::thread;
 
 use clap::Parser;
-use cli::Args;
-use buffer::SharedBuffer;
-use stats::StatsCollector;
+use pipeview::buffer::SharedBuffer;
+use pipeview::cli::Args;
+use pipeview::stats::StatsCollector;
+use pipeview::{pipeline, tui};
 
 fn main() {
     let args = Args::parse();
