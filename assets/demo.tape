@@ -4,7 +4,7 @@ Output assets/demo.webm
 
 Set Shell "bash"
 Set Theme "Catppuccin Mocha"
-Set FontFamily "JetBrains Mono"
+Set FontFamily "JetBrainsMono Nerd Font"
 Set FontSize 16
 Set Width 1400
 Set Height 800
