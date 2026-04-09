@@ -1,3 +1,4 @@
+use std::io::IsTerminal;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::thread;
@@ -24,10 +25,17 @@ fn main() {
         reader_done.store(true, Ordering::Relaxed);
     });
 
-    // Spawn writer thread
+    // Spawn writer thread.
+    // In TUI mode, if stdout is a terminal, discard output to avoid mixing
+    // data with the TUI. Data is still visible in the TUI sample viewer.
+    let stdout_is_tty = std::io::stdout().is_terminal();
     let writer_buf = buf.clone_handle();
     let writer = thread::spawn(move || {
-        pipeline::writer_thread(writer_buf);
+        if !args.quiet && stdout_is_tty {
+            pipeline::discard_thread(writer_buf);
+        } else {
+            pipeline::writer_thread(writer_buf);
+        }
     });
 
     if args.quiet {

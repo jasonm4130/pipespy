@@ -36,3 +36,9 @@ pub fn writer_thread(buffer: SharedBuffer) {
 
     let _ = writer.flush();
 }
+
+/// Discard writer: drains the buffer without writing anywhere.
+/// Used when stdout is a terminal and TUI mode is active.
+pub fn discard_thread(buffer: SharedBuffer) {
+    while buffer.pop().is_some() {}
+}

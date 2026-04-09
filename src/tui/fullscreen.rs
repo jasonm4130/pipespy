@@ -48,14 +48,14 @@ pub fn render(frame: &mut Frame, snap: &StatsSnapshot, samples: &[String], app: 
         .split(chunks[1]);
 
     // THROUGHPUT (green)
-    let throughput_val = format!("{:.0} lines/s", snap.throughput_lines);
+    let throughput_val = format!("{:.0} lines/s", snap.effective_throughput_lines());
     let throughput_box = Paragraph::new(throughput_val)
         .block(Block::default().title(" THROUGHPUT ").borders(Borders::ALL))
         .style(Style::default().fg(Color::Green));
     frame.render_widget(throughput_box, stats_chunks[0]);
 
     // BANDWIDTH (blue)
-    let bandwidth_val = format_bandwidth(snap.throughput_bytes as u64);
+    let bandwidth_val = format_bandwidth(snap.effective_throughput_bytes() as u64);
     let bandwidth_box = Paragraph::new(bandwidth_val)
         .block(Block::default().title(" BANDWIDTH ").borders(Borders::ALL))
         .style(Style::default().fg(Color::Blue));

@@ -15,6 +15,30 @@ pub struct StatsSnapshot {
     pub line_lengths: Vec<u64>,
 }
 
+impl StatsSnapshot {
+    /// Effective throughput: use tick-based value if available,
+    /// otherwise fall back to total/elapsed (useful before first tick).
+    pub fn effective_throughput_lines(&self) -> f64 {
+        if self.throughput_lines > 0.0 {
+            self.throughput_lines
+        } else if self.elapsed_secs > 0.0 {
+            self.total_lines as f64 / self.elapsed_secs
+        } else {
+            0.0
+        }
+    }
+
+    pub fn effective_throughput_bytes(&self) -> f64 {
+        if self.throughput_bytes > 0.0 {
+            self.throughput_bytes
+        } else if self.elapsed_secs > 0.0 {
+            self.total_bytes as f64 / self.elapsed_secs
+        } else {
+            0.0
+        }
+    }
+}
+
 #[derive(Debug)]
 struct StatsState {
     start_time: Instant,
