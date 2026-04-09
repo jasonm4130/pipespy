@@ -4,7 +4,10 @@ mod format;
 mod highlight;
 mod pipeline;
 mod stats;
+mod tui;
 
+use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::thread;
 
 use clap::Parser;
@@ -17,12 +20,15 @@ fn main() {
 
     let buf = SharedBuffer::new(args.buffer);
     let stats = StatsCollector::new();
+    let done = Arc::new(AtomicBool::new(false));
 
     // Spawn reader thread
     let reader_buf = buf.clone_handle();
     let reader_stats = stats.clone_handle();
+    let reader_done = Arc::clone(&done);
     let reader = thread::spawn(move || {
         pipeline::reader_thread(reader_buf, reader_stats);
+        reader_done.store(true, Ordering::Relaxed);
     });
 
     // Spawn writer thread
@@ -49,15 +55,22 @@ fn main() {
             rate_str,
         );
     } else {
-        // TUI mode: placeholder until Task 8
+        // TUI mode
+        let tui_buf = buf.clone_handle();
+        let tui_stats = stats.clone_handle();
+        let tui_done = Arc::clone(&done);
+        tui::run_tui(
+            tui_buf,
+            tui_stats,
+            tui_done,
+            args.fullscreen,
+            args.json,
+            args.csv,
+            args.no_detect,
+        );
+
         reader.join().unwrap();
         writer.join().unwrap();
-        let snap = stats.snapshot();
-        eprintln!(
-            "pipeview: {} lines | {:.1}s (TUI not yet implemented)",
-            snap.total_lines,
-            snap.elapsed_secs,
-        );
     }
 }
 
