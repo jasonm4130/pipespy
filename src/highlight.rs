@@ -1,6 +1,6 @@
+use crate::format::Format;
 use ratatui::style::{Color, Style};
 use ratatui::text::{Line, Span};
-use crate::format::Format;
 
 /// Dispatches to a format-specific highlighter, or returns plain text.
 pub fn highlight_line(line: &str, format: Format) -> Line<'static> {
@@ -61,10 +61,12 @@ fn highlight_json(line: &str) -> Line<'static> {
                     } else {
                         State::InStringValue
                     };
-                } else if ch.is_ascii_digit() || (ch == '-' && {
-                    // Check that a digit follows the minus
-                    i + 1 < len && chars[i + 1].is_ascii_digit()
-                }) {
+                } else if ch.is_ascii_digit()
+                    || (ch == '-' && {
+                        // Check that a digit follows the minus
+                        i + 1 < len && chars[i + 1].is_ascii_digit()
+                    })
+                {
                     // Flush structural/whitespace buffer
                     if !current.is_empty() {
                         spans.push(Span::styled(
@@ -107,10 +109,7 @@ fn highlight_json(line: &str) -> Line<'static> {
                     } else {
                         Color::Cyan
                     };
-                    spans.push(Span::styled(
-                        current.clone(),
-                        Style::default().fg(color),
-                    ));
+                    spans.push(Span::styled(current.clone(), Style::default().fg(color)));
                     current.clear();
                     state = State::Normal;
                 } else {
@@ -119,8 +118,12 @@ fn highlight_json(line: &str) -> Line<'static> {
             }
 
             State::InNumber => {
-                if ch.is_ascii_digit() || ch == '.' || ch == 'e' || ch == 'E'
-                    || ch == '+' || ch == '-'
+                if ch.is_ascii_digit()
+                    || ch == '.'
+                    || ch == 'e'
+                    || ch == 'E'
+                    || ch == '+'
+                    || ch == '-'
                 {
                     current.push(ch);
                 } else {
@@ -170,10 +173,7 @@ fn highlight_csv(line: &str) -> Line<'static> {
 
     for (idx, field) in fields.iter().enumerate() {
         let color = FIELD_COLORS[idx % FIELD_COLORS.len()];
-        spans.push(Span::styled(
-            field.to_string(),
-            Style::default().fg(color),
-        ));
+        spans.push(Span::styled(field.to_string(), Style::default().fg(color)));
         if idx < fields.len() - 1 {
             spans.push(Span::styled(
                 ",".to_string(),
@@ -215,18 +215,16 @@ mod tests {
         let input = r#"{"name": "Alice", "age": 30}"#;
         let line = highlight_line(input, Format::Json);
         // Must produce multiple spans
-        assert!(line.spans.len() > 1, "expected multiple spans, got {}", line.spans.len());
+        assert!(
+            line.spans.len() > 1,
+            "expected multiple spans, got {}",
+            line.spans.len()
+        );
 
         // Verify at least one Green span (key) and one Cyan span (value)
-        let has_green = line.spans.iter().any(|s| {
-            s.style.fg == Some(Color::Green)
-        });
-        let has_cyan = line.spans.iter().any(|s| {
-            s.style.fg == Some(Color::Cyan)
-        });
-        let has_yellow = line.spans.iter().any(|s| {
-            s.style.fg == Some(Color::Yellow)
-        });
+        let has_green = line.spans.iter().any(|s| s.style.fg == Some(Color::Green));
+        let has_cyan = line.spans.iter().any(|s| s.style.fg == Some(Color::Cyan));
+        let has_yellow = line.spans.iter().any(|s| s.style.fg == Some(Color::Yellow));
 
         assert!(has_green, "expected a green (key) span");
         assert!(has_cyan, "expected a cyan (value) span");

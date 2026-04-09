@@ -9,10 +9,17 @@
 [![Crates.io](https://img.shields.io/crates/v/pipespy.svg)](https://crates.io/crates/pipespy)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Built with Rust](https://img.shields.io/badge/built%20with-Rust-dea584.svg)](https://www.rust-lang.org/)
+[![GitHub Release](https://img.shields.io/github/v/release/jasonm4130/pipespy)](https://github.com/jasonm4130/pipespy/releases)
+
+<br>
+
+<img src="assets/compact-mode.png" alt="pipespy compact mode" width="800">
+
+<sub>Compact mode — throughput, sparkline, and live record samples</sub>
 
 </div>
 
----
+<br>
 
 Drop `pipespy` into any shell pipeline to instantly see what's flowing through — throughput, record samples, format detection, and more. Your data passes through **completely untouched**.
 
@@ -20,26 +27,22 @@ Drop `pipespy` into any shell pipeline to instantly see what's flowing through �
 cat events.jsonl | pipespy | jq '.users[]' | grep "active" > out.txt
 ```
 
-<!-- TODO: Replace with actual recording
-<div align="center">
-  <img src="assets/demo.gif" alt="pipespy demo" width="800">
-</div>
--->
-
 ## Install
-
-```bash
-cargo install pipespy
-```
-
-<details>
-<summary>Other install methods</summary>
 
 **Homebrew** (macOS/Linux):
 
 ```bash
 brew install jasonm4130/tap/pipespy
 ```
+
+**Cargo** (requires [Rust](https://rustup.rs)):
+
+```bash
+cargo install pipespy
+```
+
+<details>
+<summary>More install methods</summary>
 
 **Shell one-liner** (download pre-built binary):
 
@@ -55,6 +58,8 @@ cd pipespy
 cargo build --release
 # Binary at target/release/pipespy
 ```
+
+Pre-built binaries are available for macOS (arm64/amd64) and Linux (arm64/amd64) on the [releases page](https://github.com/jasonm4130/pipespy/releases).
 
 </details>
 
@@ -76,15 +81,23 @@ cat huge.jsonl | pipespy -q | jq '.' > out.json
 
 ### Two Display Modes
 
-| Compact (default) | Fullscreen (`f` to toggle) |
-|---|---|
-| Fixed height, fits in a split pane | Full terminal with histogram |
-| Throughput + sparkline + samples | Extended stats (min/max/avg line size) |
-| Perfect for quick pipeline checks | Great for deep inspection |
+Press `f` to toggle between compact and fullscreen at any time.
+
+**Compact** — fixed height, fits in a split pane. Shows throughput, sparkline, and live record samples.
+
+**Fullscreen** — fills the terminal with extended stats (min/max/avg line size), a throughput history sparkline, line length histogram, and a scrollable record viewer.
+
+<div align="center">
+<img src="assets/fullscreen-mode.png" alt="pipespy fullscreen mode" width="800">
+<br>
+<sub>Fullscreen mode — throughput history, line length histogram, and extended stats</sub>
+</div>
+
+<br>
 
 ### Format Detection
 
-pipespy automatically detects your data format and adapts:
+pipespy automatically detects your data format and adapts the display:
 
 | Format | Detection | Display |
 |--------|-----------|---------|
@@ -96,11 +109,11 @@ Override with `--json`, `--csv`, or `--no-detect`.
 
 ### Transparent Proxy
 
-Every byte that enters stdin exits stdout — **in order, unmodified**. pipespy renders entirely to stderr, so it never interferes with your data pipeline. Verified by integration tests.
+Every byte that enters stdin exits stdout — **in order, unmodified**. pipespy renders entirely to stderr, so it never interferes with your data pipeline. This is the core correctness guarantee, verified by integration tests.
 
 ### Quiet Mode
 
-Skip the TUI entirely. Get a one-line summary when the pipeline completes:
+Skip the TUI entirely. Get a one-line summary when the pipeline completes — perfect for scripts and CI:
 
 ```
 $ cat access.log | pipespy -q | awk '{print $1}' | sort -u > ips.txt
@@ -143,25 +156,25 @@ stdin  ──▶  Reader Thread  ──▶  Ring Buffer  ──▶  Writer Threa
 
 Three threads keep data flowing at full speed:
 
-- **Reader** — pumps stdin into a lock-free ring buffer, records per-line statistics
+- **Reader** — pumps stdin into a shared ring buffer, records per-line statistics
 - **Writer** — drains the buffer to stdout as fast as downstream can consume
 - **TUI** — samples stats on a timer and renders to stderr via [ratatui](https://github.com/ratatui/ratatui)
 
 The TUI thread never touches the data path. Rendering to stderr means the alternate screen, raw mode, and all visual output are completely isolated from your pipeline data.
 
-## Comparison
+## Comparison with `pv`
 
-| | `pv` | `pipespy` |
-|---|---|---|
-| Shows bytes transferred | :white_check_mark: | :white_check_mark: |
-| Shows line count | :x: | :white_check_mark: |
-| Shows actual records | :x: | :white_check_mark: |
-| Format detection | :x: | :white_check_mark: JSON, CSV, text |
+| Feature | `pv` | `pipespy` |
+|---------|:----:|:---------:|
+| Bytes transferred | :white_check_mark: | :white_check_mark: |
+| Line count | :x: | :white_check_mark: |
+| Live record samples | :x: | :white_check_mark: |
+| Format detection | :x: | :white_check_mark: |
 | Syntax highlighting | :x: | :white_check_mark: |
 | Throughput sparkline | :x: | :white_check_mark: |
 | Line length histogram | :x: | :white_check_mark: |
-| TUI with fullscreen mode | :x: | :white_check_mark: |
-| Data integrity | :white_check_mark: | :white_check_mark: byte-for-byte |
+| Fullscreen TUI | :x: | :white_check_mark: |
+| Data integrity | :white_check_mark: | :white_check_mark: |
 
 ## Built With
 
@@ -170,6 +183,23 @@ The TUI thread never touches the data path. Rendering to stderr means the altern
 - [crossterm](https://github.com/crossterm-rs/crossterm) — cross-platform terminal manipulation
 - [clap](https://github.com/clap-rs/clap) — CLI argument parsing
 
+## Contributing
+
+Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+
+```bash
+# Clone and build
+git clone https://github.com/jasonm4130/pipespy.git
+cd pipespy
+cargo build
+
+# Run tests
+cargo test
+
+# Run locally
+seq 1 100000 | cargo run
+```
+
 ## License
 
-[MIT](LICENSE)
+This project is licensed under the [MIT License](LICENSE).

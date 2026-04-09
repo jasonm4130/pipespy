@@ -1,8 +1,8 @@
-use ratatui::Frame;
 use ratatui::layout::{Constraint, Direction, Layout};
 use ratatui::style::{Color, Style};
 use ratatui::text::{Line, Span};
 use ratatui::widgets::{BarChart, Block, Borders, List, ListItem, Paragraph, Sparkline};
+use ratatui::Frame;
 
 use crate::highlight::highlight_line;
 use crate::stats::StatsSnapshot;
@@ -15,12 +15,12 @@ pub fn render(frame: &mut Frame, snap: &StatsSnapshot, samples: &[String], app: 
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
-            Constraint::Length(1),   // Header
-            Constraint::Length(5),   // Extended stats bar
-            Constraint::Length(8),   // Sparkline
-            Constraint::Length(10),  // Histogram
-            Constraint::Min(6),      // Records
-            Constraint::Length(1),   // Footer
+            Constraint::Length(1),  // Header
+            Constraint::Length(5),  // Extended stats bar
+            Constraint::Length(8),  // Sparkline
+            Constraint::Length(10), // Histogram
+            Constraint::Min(6),     // Records
+            Constraint::Length(1),  // Footer
         ])
         .split(area);
 
@@ -30,8 +30,8 @@ pub fn render(frame: &mut Frame, snap: &StatsSnapshot, samples: &[String], app: 
         " pipespy \u{2502} fullscreen  elapsed: {} \u{2502} q to detach",
         elapsed_str
     );
-    let header = Paragraph::new(header_text)
-        .style(Style::default().fg(Color::White).bg(Color::DarkGray));
+    let header =
+        Paragraph::new(header_text).style(Style::default().fg(Color::White).bg(Color::DarkGray));
     frame.render_widget(header, chunks[0]);
 
     // --- Extended stats bar: 6 bordered boxes ---
@@ -64,7 +64,11 @@ pub fn render(frame: &mut Frame, snap: &StatsSnapshot, samples: &[String], app: 
     // TOTAL LINES (white)
     let total_val = format_total_lines(snap.total_lines);
     let total_box = Paragraph::new(total_val)
-        .block(Block::default().title(" TOTAL LINES ").borders(Borders::ALL))
+        .block(
+            Block::default()
+                .title(" TOTAL LINES ")
+                .borders(Borders::ALL),
+        )
         .style(Style::default().fg(Color::White));
     frame.render_widget(total_box, stats_chunks[2]);
 
@@ -143,8 +147,8 @@ pub fn render(frame: &mut Frame, snap: &StatsSnapshot, samples: &[String], app: 
         })
         .collect();
 
-    let records_list = List::new(items)
-        .block(Block::default().title(" records ").borders(Borders::ALL));
+    let records_list =
+        List::new(items).block(Block::default().title(" records ").borders(Borders::ALL));
     frame.render_widget(records_list, records_area);
 
     // --- Footer ---

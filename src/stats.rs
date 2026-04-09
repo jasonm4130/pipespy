@@ -73,6 +73,12 @@ pub struct StatsCollector {
     inner: Arc<Mutex<StatsState>>,
 }
 
+impl Default for StatsCollector {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl StatsCollector {
     pub fn new() -> Self {
         Self {

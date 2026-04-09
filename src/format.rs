@@ -46,9 +46,9 @@ pub fn detect(lines: &[String]) -> Format {
     }
 
     // Check if all lines are valid JSON
-    let all_json = non_empty.iter().all(|line| {
-        serde_json::from_str::<serde_json::Value>(line).is_ok()
-    });
+    let all_json = non_empty
+        .iter()
+        .all(|line| serde_json::from_str::<serde_json::Value>(line).is_ok());
 
     if all_json {
         return Format::Json;
@@ -79,12 +79,7 @@ pub fn detect(lines: &[String]) -> Format {
 /// - If force_json -> Json
 /// - If force_csv -> Csv
 /// - Otherwise -> detect(samples)
-pub fn resolve(
-    force_json: bool,
-    force_csv: bool,
-    no_detect: bool,
-    samples: &[String],
-) -> Format {
+pub fn resolve(force_json: bool, force_csv: bool, no_detect: bool, samples: &[String]) -> Format {
     if no_detect {
         return Format::PlainText;
     }
@@ -148,9 +143,7 @@ mod tests {
 
     #[test]
     fn resolve_no_detect() {
-        let lines = vec![
-            r#"{"valid": "json"}"#.to_string(),
-        ];
+        let lines = vec![r#"{"valid": "json"}"#.to_string()];
         assert_eq!(resolve(false, false, true, &lines), Format::PlainText);
     }
 }

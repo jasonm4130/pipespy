@@ -1,7 +1,7 @@
 use std::io::stderr;
 use std::os::fd::AsRawFd;
-use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 use crossterm::{
@@ -93,14 +93,21 @@ pub fn run_tui(
 ) {
     // Enable raw mode on stderr (not stdin, which is the data pipe)
     let stderr_fd = stderr().as_raw_fd();
-    let orig_termios = enable_raw_mode_on_fd(stderr_fd).expect("failed to enable raw mode on stderr");
+    let orig_termios =
+        enable_raw_mode_on_fd(stderr_fd).expect("failed to enable raw mode on stderr");
     let mut stderr_handle = stderr();
     execute!(stderr_handle, EnterAlternateScreen).expect("failed to enter alternate screen");
 
     let backend = CrosstermBackend::new(stderr_handle);
     let mut terminal = Terminal::new(backend).expect("failed to create terminal");
 
-    let mut app = App::new(fullscreen, force_json, force_csv, no_detect, Arc::clone(&done));
+    let mut app = App::new(
+        fullscreen,
+        force_json,
+        force_csv,
+        no_detect,
+        Arc::clone(&done),
+    );
 
     let tick_interval = Duration::from_millis(500);
     let mut last_tick = Instant::now();

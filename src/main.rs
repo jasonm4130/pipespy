@@ -46,7 +46,11 @@ fn main() {
         let snap = stats.snapshot();
         let bytes_str = format_bytes(snap.total_bytes);
         let elapsed = snap.elapsed_secs;
-        let rate = if elapsed > 0.0 { snap.total_bytes as f64 / elapsed } else { 0.0 };
+        let rate = if elapsed > 0.0 {
+            snap.total_bytes as f64 / elapsed
+        } else {
+            0.0
+        };
         let rate_str = format_bytes(rate as u64);
         eprintln!(
             "pipespy: {} lines | {} | {:.1}s | {}/s",
