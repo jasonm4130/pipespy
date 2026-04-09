@@ -101,7 +101,7 @@ jobs:
       - name: Update formula
         run: |
           cat > homebrew-tap/Formula/pipespy.rb << 'FORMULA'
-          class Pipeview < Formula
+          class Pipespy < Formula
             desc "Real-time pipeline debugger — pv shows bytes, pipespy shows your data"
             homepage "https://github.com/jasonm4130/pipespy"
             version "${{ steps.version.outputs.version }}"
