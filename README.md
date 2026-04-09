@@ -13,9 +13,7 @@
 
 <br>
 
-<img src="assets/compact-mode.png" alt="pipespy compact mode" width="800">
-
-<sub>Compact mode — throughput, sparkline, and live record samples</sub>
+<img src="assets/demo.gif" alt="pipespy demo" width="800">
 
 </div>
 
