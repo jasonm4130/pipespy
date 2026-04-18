@@ -2,9 +2,9 @@
 
 # pipespy
 
-**Real-time pipeline debugger for your terminal.**
+**See your data, not just your bytes.**
 
-`pv` shows bytes — `pipespy` shows your data.
+`pv` shows throughput. `pipespy` shows what's actually flowing through.
 
 [![Crates.io](https://img.shields.io/crates/v/pipespy.svg)](https://crates.io/crates/pipespy)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
@@ -19,11 +19,42 @@
 
 <br>
 
-Drop `pipespy` into any shell pipeline to instantly see what's flowing through — throughput, record samples, format detection, and more. Your data passes through **completely untouched**.
+Debugging shell pipelines means guessing what's in the data mid-stream. `pv` tells you bytes per second. `jq` tells you nothing until the pipe is done. `pipespy` sits in the middle and shows you live record samples, throughput, format detection, and stats — without touching a single byte of your data.
 
 ```bash
 cat events.jsonl | pipespy | jq '.users[]' | grep "active" > out.txt
 ```
+
+## Why It Exists
+
+I built this after spending too long guessing whether a stalled pipeline was a slow producer, a slow consumer, or bad data. `pv` shows MB/s. That's useful, but it tells you nothing about whether your JSONL is malformed or your CSV has inconsistent columns.
+
+`pipespy` renders entirely to stderr so it never touches your data path. Every byte that enters stdin exits stdout, in order, unmodified. The TUI is a side-channel observer, not a filter.
+
+## How It Works
+
+```
+stdin  ──▶  Reader Thread  ──▶  Ring Buffer  ──▶  Writer Thread  ──▶  stdout
+                                     │
+                               Stats Collector
+                                     │
+                               TUI Renderer  ──▶  stderr
+```
+
+Three threads, separated by design:
+
+- **Reader** — pumps stdin into a shared ring buffer, records per-line statistics
+- **Writer** — drains the buffer to stdout as fast as downstream can consume
+- **TUI** — samples stats on a timer and renders to stderr via [ratatui](https://github.com/ratatui/ratatui)
+
+The TUI thread never touches the data path. This separation is the core correctness guarantee: rendering to stderr means the alternate screen, raw mode, and all visual output are isolated from pipeline data. Data integrity is verified by integration tests.
+
+## Tech Stack
+
+- [Rust](https://www.rust-lang.org/) — single binary, no runtime dependencies
+- [ratatui](https://github.com/ratatui/ratatui) — terminal UI framework
+- [crossterm](https://github.com/crossterm-rs/crossterm) — cross-platform terminal control
+- [clap](https://github.com/clap-rs/clap) — CLI argument parsing
 
 ## Install
 
@@ -95,7 +126,7 @@ Press `f` to toggle between compact and fullscreen at any time.
 
 ### Format Detection
 
-pipespy automatically detects your data format and adapts the display:
+pipespy detects your data format and adapts the display:
 
 | Format | Detection | Display |
 |--------|-----------|---------|
@@ -105,13 +136,9 @@ pipespy automatically detects your data format and adapts the display:
 
 Override with `--json`, `--csv`, or `--no-detect`.
 
-### Transparent Proxy
-
-Every byte that enters stdin exits stdout — **in order, unmodified**. pipespy renders entirely to stderr, so it never interferes with your data pipeline. This is the core correctness guarantee, verified by integration tests.
-
 ### Quiet Mode
 
-Skip the TUI entirely. Get a one-line summary when the pipeline completes — perfect for scripts and CI:
+Skip the TUI entirely. Get a one-line summary when the pipeline completes — useful for scripts and CI:
 
 ```
 $ cat access.log | pipespy -q | awk '{print $1}' | sort -u > ips.txt
@@ -142,24 +169,6 @@ Options:
   -V, --version           Print version
 ```
 
-## Architecture
-
-```
-stdin  ──▶  Reader Thread  ──▶  Ring Buffer  ──▶  Writer Thread  ──▶  stdout
-                                     │
-                               Stats Collector
-                                     │
-                               TUI Renderer  ──▶  stderr
-```
-
-Three threads keep data flowing at full speed:
-
-- **Reader** — pumps stdin into a shared ring buffer, records per-line statistics
-- **Writer** — drains the buffer to stdout as fast as downstream can consume
-- **TUI** — samples stats on a timer and renders to stderr via [ratatui](https://github.com/ratatui/ratatui)
-
-The TUI thread never touches the data path. Rendering to stderr means the alternate screen, raw mode, and all visual output are completely isolated from your pipeline data.
-
 ## Comparison with `pv`
 
 | Feature | `pv` | `pipespy` |
@@ -174,16 +183,11 @@ The TUI thread never touches the data path. Rendering to stderr means the altern
 | Fullscreen TUI | :x: | :white_check_mark: |
 | Data integrity | :white_check_mark: | :white_check_mark: |
 
-## Built With
+## Status
 
-- [Rust](https://www.rust-lang.org/) — zero-cost abstractions, fearless concurrency
-- [ratatui](https://github.com/ratatui/ratatui) — terminal UI framework
-- [crossterm](https://github.com/crossterm-rs/crossterm) — cross-platform terminal manipulation
-- [clap](https://github.com/clap-rs/clap) — CLI argument parsing
+Active development. Core functionality is stable. See [issues](https://github.com/jasonm4130/pipespy/issues) for planned work.
 
 ## Contributing
-
-Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 ```bash
 # Clone and build
@@ -198,6 +202,8 @@ cargo test
 seq 1 100000 | cargo run
 ```
 
+See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+
 ## License
 
-This project is licensed under the [MIT License](LICENSE).
+MIT. See [LICENSE](LICENSE).
